@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tower of Hanoi - 7 Disks</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f7f9fc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .game {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .tower {
+      width: 100px;
+      height: 350px;
+      background: #e0e0e0;
+      border-radius: 5px;
+      position: relative;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      padding-bottom: 10px;
+    }
+
+    .rod {
+      width: 8px;
+      height: 250px;
+      background: #888;
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .disk {
+      height: 20px;
+      margin: 3px 0;
+      border-radius: 4px;
+      text-align: center;
+      color: white;
+      font-weight: bold;
+      cursor: grab;
+    }
+
+    .disk1 { width: 40px; background: #e74c3c; }
+    .disk2 { width: 60px; background: #f39c12; }
+    .disk3 { width: 80px; background: #f1c40f; }
+    .disk4 { width: 100px; background: #2ecc71; }
+    .disk5 { width: 120px; background: #3498db; }
+    .disk6 { width: 140px; background: #9b59b6; }
+    .disk7 { width: 160px; background: #34495e; }
+
+    .controls {
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    .timer {
+      margin-top: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tower of Hanoi - 7 Disks</h1>
+  <div class="game">
+    <div id="tower1" class="tower" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <div class="rod"></div>
+    </div>
+    <div id="tower2" class="tower" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <div class="rod"></div>
+    </div>
+    <div id="tower3" class="tower" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <div class="rod"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button onclick="resetGame()">Reset Game</button>
+    <div class="timer">Time: <span id="timer">00:00</span></div>
+  </div>
+
+  <script>
+    let startTime, timerInterval;
+
+    const towers = {
+      tower1: [],
+      tower2: [],
+      tower3: []
+    };
+
+    function createDisks() {
+      const tower = document.getElementById("tower1");
+      tower.innerHTML = '<div class="rod"></div>';
+      towers.tower1 = [];
+
+      for (let i = 7; i >= 1; i--) {
+        const disk = document.createElement("div");
+        disk.id = `disk${i}`;
+        disk.className = `disk disk${i}`;
+        disk.draggable = true;
+        disk.ondragstart = drag;
+        disk.textContent = i;
+        towers.tower1.push(disk.id);
+        tower.appendChild(disk);
+      }
+
+      towers.tower2 = [];
+      towers.tower3 = [];
+
+      document.getElementById("tower2").innerHTML = '<div class="rod"></div>';
+      document.getElementById("tower3").innerHTML = '<div class="rod"></div>';
+    }
+
+    function resetGame() {
+      clearInterval(timerInterval);
+      document.getElementById("timer").textContent = "00:00";
+      startTime = Date.now();
+      startTimer();
+      createDisks();
+    }
+
+    function allowDrop(ev) {
+      ev.preventDefault();
+    }
+
+    function drag(ev) {
+      const diskId = ev.target.id;
+      const parentId = ev.target.parentElement.id;
+      if (towers[parentId][towers[parentId].length - 1] !== diskId) {
+        ev.preventDefault(); // not top disk
+        return;
+      }
+      ev.dataTransfer.setData("diskId", diskId);
+      ev.dataTransfer.setData("fromTower", parentId);
+    }
+
+    function drop(ev) {
+      ev.preventDefault();
+      const diskId = ev.dataTransfer.getData("diskId");
+      const fromTower = ev.dataTransfer.getData("fromTower");
+      let toTower = ev.currentTarget.id;
+
+      if (fromTower === toTower) return;
+
+      const movingDiskNum = parseInt(diskId.replace("disk", ""));
+      const topToDiskId = towers[toTower][towers[toTower].length - 1];
+      const topToDiskNum = topToDiskId ? parseInt(topToDiskId.replace("disk", "")) : Infinity;
+
+      if (movingDiskNum < topToDiskNum) {
+        // Move disk
+        towers[fromTower].pop();
+        towers[toTower].push(diskId);
+        document.getElementById(toTower).appendChild(document.getElementById(diskId));
+        checkWin();
+      } else {
+        alert("Invalid move: Cannot place larger disk on smaller one.");
+      }
+    }
+
+    function checkWin() {
+      if (towers.tower3.length === 7) {
+        clearInterval(timerInterval);
+        alert("You solved it! Time: " + document.getElementById("timer").textContent);
+      }
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        let elapsed = Math.floor((Date.now() - startTime) / 1000);
+        let mins = String(Math.floor(elapsed / 60)).padStart(2, "0");
+        let secs = String(elapsed % 60).padStart(2, "0");
+        document.getElementById("timer").textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    // Init
+    resetGame();
+  </script>
+</body>
+</html>
